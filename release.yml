@@ -1,0 +1,42 @@
+name: Build game, publish patch, build Android app
+on:
+  push: { branches: [main] }
+  workflow_dispatch: {}
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: pages, cancel-in-progress: false }
+env:
+  UPDATE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest.json
+  APP_VERSION: ${{ github.run_number }}
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: '${{ steps.deploy.outputs.page_url }}' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: node prepare.mjs bundle
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - id: deploy
+        uses: actions/deploy-pages@v4
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm install --no-audit --no-fund
+      - run: node prepare.mjs
+      - run: npx cap add android
+      - run: node native-setup.mjs
+      - run: npx cap sync android
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with: { name: HulaVaquero-apk, path: android/app/build/outputs/apk/debug/app-debug.apk }

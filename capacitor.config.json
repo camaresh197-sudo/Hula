@@ -1,0 +1,12 @@
+{
+  "appId": "com.hulavaquero.skyride",
+  "appName": "Hula Vaquero",
+  "webDir": "www",
+  "backgroundColor": "#000000",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "CapacitorUpdater": { "autoUpdate": false, "appReadyTimeout": 15000, "resetWhenUpdate": true },
+    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#000000", "showSpinner": false },
+    "StatusBar": { "overlaysWebView": true }
+  }
+}
